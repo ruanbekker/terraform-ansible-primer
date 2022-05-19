@@ -5,6 +5,8 @@ Terraform + Ansible = &lt;3
 
 This is a terraform and ansible primer repo that I've setup for myself to use terraform to deploy EC2 instances and dump the instance details to a ansible inventory file using terraforms `local_file` resource. Then use ansible to deploy my ansible playbook to the target instances.
 
+_Related_: If you would like to use Hashicorp Packer to install the software with ansible, create the AMI and let Terraform use that AMI, checkout my [terraform-packer-ansible-nginx-basic](https://github.com/ruanbekker/terraform-packer-ansible-nginx-basic) github project.
+
 ## Rundown
 
 This demonstration does the following:
