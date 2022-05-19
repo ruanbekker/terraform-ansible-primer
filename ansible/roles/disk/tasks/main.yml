@@ -1,0 +1,70 @@
+---
+# https://github.com/transferwise/ansible-ebs-automatic-nvme-mapping 
+- name: install common apps
+  apt:
+    name:
+      - xfsprogs
+      - nvme-cli
+    state: present
+
+- name: "Check if any nvme devices exist"
+  command: nvme list
+  register: nvme_exist
+  changed_when: False
+  check_mode: no
+
+- name: Install files
+  block:
+    - name: "Install ebs mapper script"
+      copy:
+        src: "ebs-nvme-mapping.sh"
+        dest: "/usr/local/bin/ebs-nvme-mapping"
+        owner: root
+        group: root
+        mode: 0755
+
+    - name: "Install udev rules"
+      copy:
+        src: "999-aws-ebs-nvme.rules"
+        dest: "/etc/udev/rules.d/999-aws-ebs-nvme.rules"
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: "Ensure script runs once"
+      command: /usr/local/bin/ebs-nvme-mapping
+      changed_when: False
+
+  when: not(nvme_exist.stdout | regex_search('No NVMe devices detected.'))
+
+- name: Create a xfs filesystem on /dev/sdf
+  community.general.filesystem:
+    fstype: xfs
+    dev: /dev/sdf
+
+- name: create /data directory
+  file:
+    path: /data
+    state: directory
+    owner: "{{ default_user }}"
+    group: "{{ default_group }}"
+    mode: 0755
+
+- name: mount /dev/sdf on /data directory
+  ansible.posix.mount:
+    path: /data
+    src: /dev/sdf
+    fstype: xfs
+    opts: defaults,nofail
+    state: present
+
+- name: "Check if disk is already mounted"
+  command: "/bin/mountpoint -q /data"
+  register: mount_stat
+  failed_when: False
+  changed_when: False
+
+- name: ensure all devices are mounted
+  ansible.builtin.shell:
+    cmd: mount --all
+  when: mount_stat.rc == 1

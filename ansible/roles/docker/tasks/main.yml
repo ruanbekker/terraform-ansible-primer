@@ -1,0 +1,10 @@
+---
+# credit: https://github.com/geerlingguy/ansible-role-docker
+- include_tasks: debian/setup-docker.yml
+  when: ansible_os_family == 'Debian'
+
+- include_tasks: general/setup-docker-compose.yml
+  when: docker_install_compose | bool
+
+- include_tasks: general/configure-docker-users.yml
+  when: docker_users | length > 0

@@ -1,0 +1,14 @@
+---
+- name: setup disk
+  hosts: all
+  become: true
+  become_user: root
+  roles:
+    - disk
+
+- name: setup docker
+  hosts: all
+  become: true
+  become_user: root
+  roles:
+    - docker
